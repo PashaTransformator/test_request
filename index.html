@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Wep Page from send messages</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    </head>
+<body>
+    <h1>Отправка сообщений и их подсчет</h1>
+    <form mame="data_form" action="" onsubmit="sendMessage(event)">
+        <p>
+            <b>Любое сообщение:</b>
+            <input type="text" id="messageText"/>
+        </p>
+        <p>
+            <b>Коментарий:</b>
+            <input type="text" id="messageComment"/>
+        </p>
+        <p>
+            <b>Ваш любимый браузер?</b><br>
+            <input type="radio" name="browser" value="Internet Explorer" id="choice">
+            <label for="choice">Internet Explorer</label><br>
+
+            <input type="radio" name="browser" value="FierFox" id="choice">
+            <label for="choice">FierFox</label><br>
+
+            <input type="radio" name="browser" value="Google Chrome" id="choice">
+            <label for="choice">Google Chrome</label><br>
+
+            <input type="radio" name="browser" value="Opera" id="choice">
+            <label for="choice">Opera</label><br>
+        </p>
+        <button type="submit">Отправить</button>
+        <button type="reset">Отчистить</button>
+    </form>
+        <ul id='messages'>
+        </ul>
+
+    <script>
+    var ws = new WebSocket("ws://localhost:8000/ws"); // открываем соединение создавая обьект WebSocket
+    ws.onmessage = function(event) {
+        var messages = document.getElementById('messages')
+        var message = document.createElement('li') //создаем элемент списка
+        const receive_data = JSON.parse(event.data) // разбераем полученый JSON
+
+        //получаем конкрентые значения.
+        // если бы сформировать сообщение ранее в backend потребовалось меньше манипуляций.
+        var id = receive_data['id']
+        var msg = receive_data['msg']
+
+        var content = document.createTextNode(id + " " + msg) // формируем сообщение
+
+        message.appendChild(content) // добавляем элемент в конец
+        messages.appendChild(message)
+                                    };
+
+        function sendMessage(event) { //функйия отправки сообщения
+          if (document.getElementById("messageText").value == '') //проверка на пустое поле
+          {
+                alert ('Нельзя отправить пустое сообщение');
+               return false;
+                            }
+
+           var input = document.getElementById("messageText") //получаем сообщение с веб страницы
+           var comment = document.getElementById("messageComment") //получаем данные коментария с веб страницы
+           // получаем выбор любимого браузера.
+
+
+           if (document.querySelector('input[name="browser"]:checked')){
+              var browser = document.querySelector('input[name="browser"]:checked')
+           } else {
+              var browser = "err"
+           }
+
+           var msg = {
+               text: input.value,
+               comm: comment.value,
+               brow: browser.value,
+               };
+
+           ws.send(JSON.stringify(msg)) //отправляем данные в формате JSON,
+           input.value = '' // отчищаем поля ввода
+           comment.value = ''
+           document.getElementById('choice').checked='false' //убираем выбор с кнопок
+           event.preventDefault()
+           console.log(msg)
+                                    }
+    </script>
+</body>
+</html>
